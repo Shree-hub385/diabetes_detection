@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diabetes Detection System</title>
+<style>
+:root{
+  --bg:#f5f7fa; --card:#fff; --ink:#0f172a; --muted:#64748b; --line:#e2e8f0;
+  --brand:#0f766e; --brand-ink:#fff; --low:#16a34a; --moderate:#d97706; --high:#dc2626;
+  --up:#dc2626; --down:#2563eb; --shadow:0 1px 2px rgba(15,23,42,.06),0 4px 14px rgba(15,23,42,.05);
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0b1220; --card:#131c2e; --ink:#e5e9f0; --muted:#94a3b8; --line:#243049;
+  --brand:#2dd4bf; --brand-ink:#04211d; --up:#f87171; --down:#60a5fa; --shadow:none;}}
+*{box-sizing:border-box} html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--card);border-bottom:1px solid var(--line)}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+.top{display:flex;align-items:center;gap:14px;padding:16px 0;flex-wrap:wrap}
+.logo{width:38px;height:38px;border-radius:10px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-weight:800}
+h1{font-size:19px;margin:0} .sub{color:var(--muted);font-size:13px}
+nav{margin-left:auto;display:flex;gap:4px;flex-wrap:wrap}
+nav button{border:0;background:none;color:var(--muted);font:inherit;font-weight:600;padding:8px 14px;border-radius:8px;cursor:pointer}
+nav button.on{background:var(--brand);color:var(--brand-ink)}
+nav button:focus-visible,input:focus-visible,.btn:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+main{padding:22px 0 60px} section{display:none} section.on{display:block}
+.grid{display:grid;grid-template-columns:minmax(300px,420px) 1fr;gap:20px;align-items:start}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
+.card h2{margin:0 0 4px;font-size:16px} .card p.hint{margin:0 0 14px;color:var(--muted);font-size:13px}
+label{display:block;font-size:13px;font-weight:600;margin-top:12px}
+label small{color:var(--muted);font-weight:400}
+input[type=number]{width:100%;margin-top:4px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;align-items:end}
+.err{color:var(--high);font-size:12px;margin-top:3px;min-height:0}
+.btn{border:0;border-radius:10px;padding:11px 16px;font:inherit;font-weight:700;cursor:pointer;background:var(--brand);color:var(--brand-ink)}
+.btn.ghost{background:none;color:var(--ink);border:1px solid var(--line)}
+.actions{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+.samples{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.chip{border:1px solid var(--line);background:none;color:var(--ink);border-radius:99px;padding:4px 11px;font-size:12px;cursor:pointer}
+.chip:hover{border-color:var(--brand)}
+.empty{color:var(--muted);text-align:center;padding:60px 10px}
+.gauge{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.pct{font-size:52px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.badge{display:inline-block;padding:3px 12px;border-radius:99px;font-weight:700;font-size:13px;color:#fff}
+.badge.low{background:var(--low)}.badge.moderate{background:var(--moderate)}.badge.high{background:var(--high)}
+.bar{position:relative;height:12px;border-radius:99px;margin:18px 0 6px;background:linear-gradient(90deg,var(--low) 0 35%,var(--moderate) 35% 65%,var(--high) 65% 100%)}
+.bar i{position:absolute;top:-5px;width:4px;height:22px;background:var(--ink);border-radius:2px;transform:translateX(-2px);transition:left .5s}
+.bar-l{display:flex;justify-content:space-between;color:var(--muted);font-size:11px}
+.thr{margin-top:14px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.thr input{accent-color:var(--brand);flex:1;min-width:120px}
+.contrib{margin-top:6px}
+.c-row{display:grid;grid-template-columns:170px 1fr 56px;gap:10px;align-items:center;padding:5px 0;font-size:13px}
+.c-row .v{color:var(--muted);font-size:11px;display:block}
+.c-track{position:relative;height:18px}
+.c-track:before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--line)}
+.c-bar{position:absolute;top:2px;height:14px;border-radius:3px;transition:width .5s}
+.c-bar.up{background:var(--up)} .c-bar.down{background:var(--down)}
+.c-num{text-align:right;font-variant-numeric:tabular-nums;font-size:12px}
+.legend{display:flex;gap:16px;font-size:12px;color:var(--muted);margin:6px 0 2px}
+.legend b{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.note{font-size:12px;color:var(--muted);margin-top:12px}
+.warn{background:rgba(217,119,6,.1);border:1px solid rgba(217,119,6,.35);border-radius:10px;padding:10px 12px;font-size:12.5px;margin-top:14px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left} th{color:var(--muted);font-weight:600;font-size:12px}
+tr.best td{background:rgba(15,118,110,.1);font-weight:700}
+.scroll{overflow-x:auto}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.kpi b{display:block;font-size:24px} .kpi span{color:var(--muted);font-size:12px}
+.gal{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:16px;margin-top:20px}
+@media(max-width:480px){.gal{grid-template-columns:1fr}.c-row{grid-template-columns:110px 1fr 48px}}
+.gal figure{margin:0;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.gal img{width:100%;height:auto;border-radius:8px;background:#fff;display:block}
+.gal figcaption{font-size:12.5px;color:var(--muted);margin-top:8px}
+h3{margin:26px 0 10px;font-size:15px}
+ul.clean{padding-left:18px;margin:6px 0} ul.clean li{margin:4px 0}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:20px} @media(max-width:760px){.cols{grid-template-columns:1fr}}
+footer{color:var(--muted);font-size:12px;text-align:center;padding:20px}
+</style>
+</head>
+<body>
+<header><div class="wrap top">
+  <div class="logo">D</div>
+  <div><h1>Diabetes Detection System</h1><div class="sub">Early-risk screening · explainable ML · Pima Indians Diabetes data</div></div>
+  <nav role="tablist">
+    <button class="on" data-tab="risk">Risk assessment</button>
+    <button data-tab="perf">Model performance</button>
+    <button data-tab="about">Method</button>
+  </nav>
+</div></header>
+
+<main class="wrap">
+{% if not ready %}
+<div class="card"><h2>Model not trained yet</h2>
+<p class="hint">Run <code>python -m src.train</code> (or double-click the launcher again) and reload this page.</p></div>
+{% else %}
+
+<!-- ===== RISK ===== -->
+<section id="risk" class="on">
+<div class="grid">
+  <form class="card" id="form" novalidate>
+    <h2>Patient details</h2>
+    <p class="hint">Fill in the clinical values. Optional fields left blank are replaced by the training-set median.</p>
+    <div class="samples">
+      <span class="sub" style="align-self:center">Examples:</span>
+      <button type="button" class="chip" data-s="a">Healthy profile</button>
+      <button type="button" class="chip" data-s="b">Borderline</button>
+      <button type="button" class="chip" data-s="c">High-risk profile</button>
+    </div>
+    <div class="row2">
+    {% for k,(label,unit,lo,hi,req) in fields.items() %}
+      <div {% if k in ['Glucose','DiabetesPedigreeFunction'] %}style="grid-column:span 1"{% endif %}>
+        <label for="f_{{k}}">{{label}} <small>({{unit}}){% if not req %} · optional{% endif %}</small></label>
+        <input type="number" id="f_{{k}}" name="{{k}}" min="{{lo}}" max="{{hi}}" step="{{ '0.001' if k=='DiabetesPedigreeFunction' else '0.1' if k=='BMI' else '1' }}" {% if req %}required{% endif %}>
+        <div class="err" id="e_{{k}}"></div>
+      </div>
+    {% endfor %}
+    </div>
+    <div class="actions"><button class="btn" type="submit">Assess risk</button><button class="btn ghost" type="reset" id="reset">Clear</button></div>
+    <div class="warn">Screening aid for educational use. It is <b>not</b> a diagnosis — confirm with an HbA1c / fasting-glucose test and clinical judgement.</div>
+  </form>
+
+  <div>
+    <div class="card" id="result"><div class="empty">Enter patient values and press <b>Assess risk</b> to see the risk score and the factors behind it.</div></div>
+  </div>
+</div>
+</section>
+
+<!-- ===== PERFORMANCE ===== -->
+<section id="perf">
+  <div id="perfbody"><div class="empty">Loading…</div></div>
+</section>
+
+<!-- ===== ABOUT ===== -->
+<section id="about">
+<div class="card">
+  <h2>What this project does</h2>
+  <p class="hint">Implements the Section&nbsp;4 plan of the capstone: adopt &amp; modify the base paper's approach.</p>
+  <div class="cols">
+    <div>
+      <h3 style="margin-top:6px">Pipeline</h3>
+      <ul class="clean">
+        <li><b>Data:</b> Pima Indians Diabetes (768 patients, 8 predictors). Impossible zeros (glucose, BP, skin-fold, insulin, BMI) are treated as missing and median-imputed <i>inside</i> the pipeline (no leakage).</li>
+        <li><b>Benchmark:</b> the base paper's 5 classifiers re-run on an identical stratified 80:20 split.</li>
+        <li><b>Imbalance:</b> class weighting and SMOTE (applied to training folds only) — evaluated as an ablation and as part of the tuning search.</li>
+        <li><b>Tuning:</b> randomized search (5-fold CV, F1) for Random Forest and XGBoost.</li>
+        <li><b>Stacking:</b> RF + XGBoost with a Logistic-Regression meta-learner.</li>
+        <li><b>Final model</b> is chosen by cross-validated ROC-AUC on the training set only — never on the test set.</li>
+      </ul>
+    </div>
+    <div>
+      <h3 style="margin-top:6px">Explainability</h3>
+      <ul class="clean">
+        <li>Each score is accompanied by SHAP values: red bars push the predicted risk up, blue bars push it down, relative to the average training patient.</li>
+        <li>The risk bands (low &lt; 35 %, moderate 35–65 %, high ≥ 65 %) are for display; use the threshold slider to explore the sensitivity / specificity trade-off.</li>
+      </ul>
+      <h3>Limitations (inherited from the base paper)</h3>
+      <ul class="clean">
+        <li>768 records from one population subgroup; may not generalise.</li>
+        <li>No independent external test set.</li>
+        <li>Associations, not causation. Not a medical device.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</section>
+{% endif %}
+</main>
+<footer>Diabetes Detection System — Capstone Project · Prajwal Joshi · Shreerang Kulkarni · Janhavi Kaysath · Kunal Salunke</footer>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const pct=x=>(x*100).toFixed(1)+"%";
+let lastProb=null;
+
+// tabs
+$$("nav button").forEach(b=>b.onclick=()=>{
+  $$("nav button").forEach(x=>x.classList.toggle("on",x===b));
+  $$("main section").forEach(s=>s.classList.toggle("on",s.id===b.dataset.tab));
+  if(b.dataset.tab==="perf") loadPerf();
+});
+
+// sample patients
+const SAMPLES={
+ a:{Pregnancies:1,Glucose:92,BloodPressure:70,SkinThickness:22,Insulin:80,BMI:23.5,DiabetesPedigreeFunction:0.25,Age:26},
+ b:{Pregnancies:3,Glucose:126,BloodPressure:78,SkinThickness:30,Insulin:120,BMI:31.2,DiabetesPedigreeFunction:0.45,Age:41},
+ c:{Pregnancies:6,Glucose:168,BloodPressure:84,SkinThickness:35,Insulin:230,BMI:38.4,DiabetesPedigreeFunction:0.9,Age:52}};
+$$(".chip").forEach(c=>c.onclick=()=>{
+  Object.entries(SAMPLES[c.dataset.s]).forEach(([k,v])=>{$("#f_"+k).value=v});
+  $("#form").requestSubmit();
+});
+$("#reset")?.addEventListener("click",()=>{$$(".err").forEach(e=>e.textContent="");
+  $("#result").innerHTML='<div class="empty">Enter patient values and press <b>Assess risk</b>.</div>';lastProb=null;});
+
+// predict
+$("#form")?.addEventListener("submit",async e=>{
+  e.preventDefault(); $$(".err").forEach(x=>x.textContent="");
+  const body={}; new FormData(e.target).forEach((v,k)=>body[k]=v);
+  $("#result").innerHTML='<div class="empty">Calculating…</div>';
+  try{
+    const r=await fetch("/api/predict",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+    const d=await r.json();
+    if(!r.ok){ Object.entries(d.errors||{}).forEach(([k,m])=>{$("#e_"+k).textContent=m});
+      $("#result").innerHTML='<div class="empty">Please correct the highlighted fields.</div>'; return;}
+    render(d);
+  }catch(err){ $("#result").innerHTML='<div class="empty">Could not reach the server.</div>'; }
+});
+
+function render(d){
+  lastProb=d.probability;
+  const mx=Math.max(...d.contributions.map(c=>Math.abs(c.shap)),0.01);
+  const rows=d.contributions.map(c=>{
+    const w=Math.abs(c.shap)/mx*50, up=c.shap>=0;
+    return `<div class="c-row"><div>${c.label}<span class="v">${c.value}${c.assumed?" (assumed median)":""} ${c.unit}</span></div>
+      <div class="c-track"><div class="c-bar ${up?"up":"down"}" style="width:${w}%;${up?"left:50%":"right:50%"}"></div></div>
+      <div class="c-num">${up?"+":"−"}${(Math.abs(c.shap)*100).toFixed(1)}</div></div>`;}).join("");
+  $("#result").innerHTML=`
+   <h2>Predicted diabetes risk</h2>
+   <p class="hint">Model: ${d.model}</p>
+   <div class="gauge"><div class="pct">${pct(d.probability)}</div>
+     <div><span class="badge ${d.band_class}">${d.band} risk</span>
+     <div class="sub" id="verdict" style="margin-top:6px"></div></div></div>
+   <div class="bar"><i style="left:${d.probability*100}%"></i></div>
+   <div class="bar-l"><span>0%</span><span>35%</span><span>65%</span><span>100%</span></div>
+   <div class="thr"><label for="thr" style="margin:0">Decision threshold</label>
+     <input id="thr" type="range" min="0.1" max="0.9" step="0.05" value="0.5"><b id="thrv">50%</b></div>
+   <h3>Why this score? <span class="sub">(${d.method} values, in percentage points)</span></h3>
+   <div class="legend"><span><b style="background:var(--up)"></b>raises risk</span><span><b style="background:var(--down)"></b>lowers risk</span>
+     <span>baseline (avg. patient): ${pct(d.base_value)}</span></div>
+   <div class="contrib">${rows}</div>
+   ${d.assumed.length?`<div class="note">Not provided, so median assumed: ${d.assumed.join(", ")}.</div>`:""}`;
+  const upd=()=>{const t=+$("#thr").value; $("#thrv").textContent=Math.round(t*100)+"%";
+    $("#verdict").textContent = lastProb>=t ? `Flagged as diabetic-risk at ${Math.round(t*100)}% threshold` : `Not flagged at ${Math.round(t*100)}% threshold`;};
+  $("#thr").oninput=upd; upd();
+}
+
+// performance tab
+let perfLoaded=false;
+async function loadPerf(){
+  if(perfLoaded) return;
+  const r=await fetch("/api/metrics"); if(!r.ok){$("#perfbody").innerHTML='<div class="card">No results yet.</div>';return;}
+  const m=await r.json(); perfLoaded=true;
+  const f=x=>(x*100).toFixed(1);
+  const row=(n,v,best)=>`<tr class="${best?"best":""}"><td>${n}${best?" ★":""}</td><td>${f(v.accuracy)}</td><td>${f(v.precision)}</td><td>${f(v.recall)}</td><td>${f(v.f1)}</td><td>${f(v.roc_auc)}</td><td>${f(v.specificity)}</td><td>${v.tp}/${v.fn}/${v.fp}/${v.tn}</td></tr>`;
+  const head=`<tr><th>Model</th><th>Accuracy</th><th>Precision</th><th>Recall</th><th>F1</th><th>ROC-AUC</th><th>Specificity</th><th>TP/FN/FP/TN</th></tr>`;
+  const b=m.best_model, ib=m.improved[b];
+  const paper=Object.entries(m.paper_accuracy).map(([n,a])=>{
+    const k=Object.keys(m.baseline).find(x=>x.startsWith(n.split(" (")[0]))||n; const o=m.baseline[k];
+    return `<tr><td>${n}</td><td>${a.toFixed(1)}</td><td>${o?f(o.accuracy):"–"}</td><td>${o?((o.accuracy*100-a)>=0?"+":"")+(o.accuracy*100-a).toFixed(1):"–"}</td></tr>`}).join("");
+  const abl=Object.entries(m.ablation).map(([n,v])=>`<tr><td>${n}</td><td>${f(v.accuracy)}</td><td>${f(v.precision)}</td><td>${f(v.recall)}</td><td>${f(v.f1)}</td><td>${f(v.roc_auc)}</td><td>${f(v.specificity)}</td><td>${v.tp}/${v.fn}/${v.fp}/${v.tn}</td></tr>`).join("");
+  const tun=Object.entries(m.tuning).map(([n,t])=>`<tr><td>${n}</td><td>${f(t.cv_f1)}</td><td style="text-align:left;white-space:normal;font-size:12px">${Object.entries(t.params).map(([k,v])=>k+"="+v).join(", ")}</td></tr>`).join("");
+  const fr=m.feature_ranking.map(([n,v])=>n+" ("+(v*100).toFixed(1)+")").join(" › ");
+  const fig=(file,cap)=>`<figure><img src="/plots/${file}" alt="${cap}" loading="lazy"><figcaption>${cap}</figcaption></figure>`;
+  $("#perfbody").innerHTML=`
+  <div class="kpis">
+    <div class="kpi"><b>${m.dataset.n}</b><span>patients (${m.dataset.n_train} train / ${m.dataset.n_test} test)</span></div>
+    <div class="kpi"><b>${f(m.dataset.positive_rate)}%</b><span>diabetic in dataset</span></div>
+    <div class="kpi"><b>${f(ib.accuracy)}%</b><span>final-model accuracy</span></div>
+    <div class="kpi"><b>${f(ib.recall)}%</b><span>final-model recall</span></div>
+    <div class="kpi"><b>${f(ib.roc_auc)}</b><span>final-model ROC-AUC (×100)</span></div>
+  </div>
+  <div class="card"><h2>All models — held-out test set (threshold 0.5)</h2>
+   <p class="hint">★ = deployed model, selected by cross-validated ROC-AUC on the training data. Values in %. Counts are TP / FN / FP / TN.</p>
+   <div class="scroll"><table>${head}
+     <tr><td colspan="8" style="text-align:left;color:var(--muted);font-size:12px;padding-top:12px">BASE-PAPER MODELS (re-run, default settings)</td></tr>
+     ${Object.entries(m.baseline).map(([n,v])=>row(n,v,false)).join("")}
+     <tr><td colspan="8" style="text-align:left;color:var(--muted);font-size:12px;padding-top:12px">CAPSTONE MODELS (imbalance-aware, tuned, stacked)</td></tr>
+     ${Object.entries(m.improved).map(([n,v])=>row(n,v,n===b)).join("")}
+   </table></div></div>
+  <div class="cols" style="margin-top:20px">
+   <div class="card"><h2>Base paper vs. our re-run (accuracy %)</h2><div class="scroll"><table>
+     <tr><th>Model</th><th>Paper</th><th>Re-run</th><th>Δ</th></tr>${paper}</table></div>
+     <p class="note">Small differences are expected: different random split seed and our preprocessing (impossible zeros → median).</p></div>
+   <div class="card"><h2>Imbalance handling (Random Forest)</h2><div class="scroll"><table>${head}${abl}</table></div></div>
+  </div>
+  <div class="card" style="margin-top:20px"><h2>Tuning (5-fold CV, F1)</h2><div class="scroll"><table>
+     <tr><th>Model</th><th>CV F1 %</th><th style="text-align:left">Selected hyper-parameters</th></tr>${tun}</table></div>
+     <p class="note"><b>Top features</b> (mean |${m.explain_method}| on test patients, pp): ${fr}</p></div>
+  <div class="gal">
+    ${fig("confusion_matrices.png","Confusion matrix for every model")}
+    ${fig("roc_curves.png","Overlaid ROC curves — base-paper models vs. capstone models")}
+    ${fig("pr_curves.png","Precision–Recall curves (informative under class imbalance)")}
+    ${fig("shap_summary.png","SHAP-style summary: which features drive predictions, and in which direction")}
+    ${fig("feature_importance.png","Feature importance (Random Forest) and permutation importance (final model)")}
+    ${fig("comparison_bars.png","Accuracy vs. the base paper; F1 and recall for all models")}
+  </div>`;
+}
+</script>
+</body>
+</html>

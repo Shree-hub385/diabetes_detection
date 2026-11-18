@@ -1,0 +1,5 @@
+# Optional: the project runs without these (it falls back to scikit-learn
+# HistGradientBoosting and a built-in Shapley estimator), but the slides
+# ask for XGBoost and SHAP, so run.py tries to install them one by one.
+xgboost
+shap
